@@ -11,15 +11,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { key } = req.body
+    const { key, hwid } = req.body
 
-    if (!key) {
-      return res.status(400).json({ error: 'No key provided' })
-    }
+    if (!key) return res.status(400).json({ error: 'No key provided' })
+    if (!hwid) return res.status(400).json({ error: 'No hwid provided' })
 
     const { data, error } = await supabase
       .from('keys')
-      .select('key, expires_at')
+      .select('key, expires_at, hwid')
       .eq('key', key)
       .single()
 
@@ -27,11 +26,23 @@ export default async function handler(req, res) {
       return res.status(403).json({ valid: false, message: 'Invalid key' })
     }
 
-    const now = new Date()
-    const expires = new Date(data.expires_at)
-
-    if (now > expires) {
+    // تحقق من انتهاء الصلاحية
+    if (new Date() > new Date(data.expires_at)) {
       return res.status(403).json({ valid: false, message: 'Key expired' })
+    }
+
+    // أول استخدام — سجل الـ hwid
+    if (!data.hwid) {
+      await supabase
+        .from('keys')
+        .update({ hwid: hwid })
+        .eq('key', key)
+      return res.status(200).json({ valid: true })
+    }
+
+    // تحقق إذا نفس الجهاز
+    if (data.hwid !== hwid) {
+      return res.status(403).json({ valid: false, message: 'Key used on another device' })
     }
 
     return res.status(200).json({ valid: true })
