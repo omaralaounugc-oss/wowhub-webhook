@@ -11,16 +11,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // يستقبل المفتاح من GET (Postback) أو POST (body)
     const key = req.query.key || (req.body && req.body.key)
 
-    if (!key) {
-      return res.status(400).json({ error: 'No key provided' })
+    if (!key || key === '{UNIQUE_ID}') {
+      return res.status(400).json({ error: 'No valid key provided' })
     }
 
-    // تاريخ انتهاء 30 يوم من الآن
     const expires_at = new Date()
-    expires_at.setDate(expires_at.getDate() + 30)
+    expires_at.setHours(expires_at.getHours() + 24)
 
     // تحقق إذا المفتاح موجود مسبقاً
     const { data: existing } = await supabase
@@ -30,7 +28,8 @@ export default async function handler(req, res) {
       .single()
 
     if (existing) {
-      return res.status(200).json({ success: true, message: 'Key already exists' })
+      // يرجع المفتاح حتى لو موجود
+      return res.status(200).json({ success: true, key: key })
     }
 
     // أضف المفتاح الجديد
