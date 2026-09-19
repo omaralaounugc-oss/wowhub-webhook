@@ -151,23 +151,23 @@
 
     <div class="state active" id="state-loading">
       <div class="spinner"></div>
-      <p>جاري تحميل مفتاحك...</p>
+      <p>loading your key...</p>
     </div>
 
     <div class="state" id="state-success">
       <div class="check-icon">✅</div>
-      <h2>مفتاحك جاهز!</h2>
-      <p class="desc">انسخ المفتاح وأدخله في السكريبت</p>
+      <h2>your key is ready!</h2>
+      <p class="desc">copy the key and put it in the script</p>
       <div class="key-box">
         <div style="text-align:right; flex:1;">
-          <div class="key-label">مفتاحك الخاص</div>
+          <div class="key-label">your owen key</div>
           <div class="key-value" id="key-display">—</div>
         </div>
         <button class="copy-btn" id="copy-btn" onclick="copyKey()">📋</button>
       </div>
       <div class="copy-toast" id="copy-toast"></div>
       <div class="expiry">
-        <span class="expiry-label">⏳ صالح حتى</span>
+        <span class="expiry-label">⏳its still working to</span>
         <span class="expiry-date" id="expiry-display">—</span>
       </div>
     </div>
@@ -175,7 +175,7 @@
     <div class="state" id="state-error">
       <span class="error-icon">❌</span>
       <h2>حدث خطأ</h2>
-      <p id="error-msg">تعذر تحميل المفتاح</p>
+      <p id="error-msg">can't load the key</p>
     </div>
 
     <div class="footer">Powered by <span>WowHub</span> • Key System v2</div>
@@ -222,7 +222,7 @@ let currentKey = '';
 async function loadKey() {
   if (!clickId || clickId === '{CLICK_ID}') {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'لم يتم العثور على مفتاح في الرابط';
+    document.getElementById('error-msg').textContent = 'didnt find the link';
     return;
   }
 
@@ -254,7 +254,7 @@ async function loadKey() {
 
   } catch (err) {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'خطأ في تحميل البيانات';
+    document.getElementById('error-msg').textContent = 'error loading the information';
   }
 }
 
@@ -265,7 +265,7 @@ function copyKey() {
     const toast = document.getElementById('copy-toast');
     btn.classList.add('copied');
     btn.textContent = '✅';
-    toast.textContent = '✓ تم النسخ!';
+    toast.textContent = '✓  copied!';
     setTimeout(() => {
       btn.classList.remove('copied');
       btn.textContent = '📋';
