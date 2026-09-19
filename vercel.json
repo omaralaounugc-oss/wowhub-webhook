@@ -9,7 +9,14 @@
     { "src": "/api/webhook", "dest": "/api/webhook.js" },
     { "src": "/api/verify", "dest": "/api/verify.js" },
     { "src": "/api/getkey", "dest": "/api/getkey.js" },
+    { "src": "/api/cron", "dest": "/api/cron.js" },
     { "src": "/index.html", "dest": "/index.html" },
     { "src": "/index2.html", "dest": "/index2.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 0 * * *"
+    }
   ]
 }
