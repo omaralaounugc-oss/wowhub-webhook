@@ -255,7 +255,7 @@ async function getAvailableKey() {
 
     // جيب مفتاح غير مستخدم وغير منتهي
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/keys?used=is.false&expires_at=gt.${now}&hwid=is.null&limit=1&select=key,expires_at`,
+      ``${SUPABASE_URL}/rest/v1/keys?used=eq.false&expires_at=gt.${now}&hwid=is.null&order=expires_at.asc&limit=1&select=key,expires_at`,`,
       {
         headers: {
           'apikey': SUPABASE_ANON_KEY,
