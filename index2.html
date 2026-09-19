@@ -243,7 +243,6 @@ function goToVerify() {
 }
 
 async function getAvailableKey() {
-  // التحقق من الـ token
   if (!token || token !== VALID_TOKEN) {
     showState('state-error');
     document.getElementById('error-msg').textContent = 'رابط غير صالح. أكمل المهام أولاً!';
@@ -251,52 +250,22 @@ async function getAvailableKey() {
   }
 
   try {
-    const now = new Date().toISOString();
-
-    // جيب مفتاح غير مستخدم وغير منتهي
-    const res = await fetch(
-      ``${SUPABASE_URL}/rest/v1/keys?used=eq.false&expires_at=gt.${now}&hwid=is.null&order=expires_at.asc&limit=1&select=key,expires_at`,`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        }
-      }
-    );
-
+    const res = await fetch(`/api/getkey?token=${token}`);
     const data = await res.json();
 
-    if (!data || data.length === 0) {
+    if (!res.ok || !data.key) {
       showState('state-error');
-      document.getElementById('error-msg').textContent = 'لا توجد مفاتيح متاحة حالياً. حاول لاحقاً!';
+      document.getElementById('error-msg').textContent = data.error || 'لا توجد مفاتيح متاحة';
       return;
     }
 
-    const keyObj = data[0];
-    assignedKey = keyObj.key;
-    expiresAt = keyObj.expires_at;
+    assignedKey = data.key;
+    expiresAt = data.expires_at;
 
-    // علّم المفتاح كـ "مستخدم"
-    await fetch(
-      `${SUPABASE_URL}/rest/v1/keys?key=eq.${encodeURIComponent(assignedKey)}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({ used: true })
-      }
-    );
-
-    // اعرض المفتاح
     document.getElementById('key-display').textContent = assignedKey;
     document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
 
-    // انتقل تلقائياً بعد 3 ثوان
     setTimeout(() => {
       goToVerify();
     }, 3000);
@@ -307,21 +276,6 @@ async function getAvailableKey() {
   }
 }
 
-// جزيئات الخلفية
-const container = document.getElementById('particles');
-for (let i = 0; i < 25; i++) {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.style.cssText = `
-    left: ${Math.random() * 100}%;
-    animation-duration: ${6 + Math.random() * 10}s;
-    animation-delay: ${Math.random() * 8}s;
-    width: ${1 + Math.random() * 2}px;
-    height: ${1 + Math.random() * 2}px;
-    opacity: ${0.3 + Math.random() * 0.5};
-  `;
-  container.appendChild(p);
-}
 
 // ابدأ
 getAvailableKey();
