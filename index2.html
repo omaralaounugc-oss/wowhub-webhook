@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WowHub - جاري تحميل مفتاحك...</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+    overflow: hidden;
+  }
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .particle {
+    position: absolute;
+    background: rgba(100, 100, 255, 0.3);
+    border-radius: 50%;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100px) scale(1); opacity: 0; }
+  }
+  .card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 40px 50px;
+    width: 420px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+  .logo {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+    border-radius: 16px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+  .brand { font-size: 22px; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px; }
+  .brand span { color: #6c63ff; }
+  .subtitle { color: #666; font-size: 13px; margin-bottom: 30px; }
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin-bottom: 30px; }
+
+  /* Loading state */
+  .spinner {
+    width: 50px; height: 50px;
+    border: 3px solid rgba(108,99,255,0.2);
+    border-top-color: #6c63ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: #aaa; font-size: 14px; }
+
+  /* Success state */
+  .success-icon {
+    width: 60px; height: 60px;
+    background: rgba(34,197,94,0.15);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .success-title { color: #22c55e; font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+  .success-msg { color: #aaa; font-size: 13px; margin-bottom: 20px; }
+  .key-box {
+    background: rgba(108,99,255,0.1);
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .key-box:hover { background: rgba(108,99,255,0.2); }
+  .key-label { font-size: 11px; color: #888; margin-bottom: 4px; text-align: right; }
+  .key-value { font-size: 15px; font-weight: bold; color: white; letter-spacing: 1px; }
+  .copy-icon { font-size: 20px; opacity: 0.6; }
+  .copy-hint { font-size: 11px; color: #666; margin-bottom: 20px; }
+
+  .expires-box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .btn-redirect {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-redirect:hover { opacity: 0.85; }
+
+  /* Error state */
+  .error-icon {
+    width: 60px; height: 60px;
+    background: rgba(239,68,68,0.15);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .error-title { color: #ef4444; font-size: 18px; font-weight: bold; margin-bottom: 6px; }
+  .error-msg { color: #aaa; font-size: 13px; }
+
+  .footer { margin-top: 20px; font-size: 11px; color: #333; }
+  .footer a { color: #6c63ff; text-decoration: none; }
+
+  .state { display: none; }
+  .state.active { display: block; }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div class="card">
+  <div class="logo">✨</div>
+  <div class="brand">WOW<span>HUB</span></div>
+  <div class="subtitle">Key System</div>
+  <hr class="divider">
+
+  <!-- Loading -->
+  <div id="state-loading" class="state active">
+    <div class="spinner"></div>
+    <div class="loading-text">جاري تحضير مفتاحك...</div>
+  </div>
+
+  <!-- Success -->
+  <div id="state-success" class="state">
+    <div class="success-icon">✅</div>
+    <div class="success-title">مفتاحك جاهز!</div>
+    <div class="success-msg">انسخ المفتاح وأدخله في السكريبت</div>
+
+    <div class="key-label">مفتاحك الخاص</div>
+    <div class="key-box" onclick="copyKey()">
+      <div>
+        <div class="key-value" id="key-display">-</div>
+      </div>
+      <div class="copy-icon">📋</div>
+    </div>
+    <div class="copy-hint" id="copy-hint">اضغط لنسخ المفتاح</div>
+
+    <div class="expires-box">
+      <span>⏳ صالح حتى</span>
+      <span id="expires-display">-</span>
+    </div>
+
+    <button class="btn-redirect" onclick="goToVerify()">فتح صفحة التحقق ←</button>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error" class="state">
+    <div class="error-icon">❌</div>
+    <div class="error-title">حدث خطأ</div>
+    <div class="error-msg" id="error-msg">لا توجد مفاتيح متاحة حالياً</div>
+  </div>
+
+  <div class="footer">Powered by <a href="#">WowHub</a> • Key System v2</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dmxiyythvdeesolugjej.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGl5eXRodmRlZXNvbHVnamVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTA0NjQsImV4cCI6MjA2NzE4NjQ2NH0.5XWdXplG5NM0AzOtgZdoLQHKsBgnj-Ookl7WeWnaeFQ';
+
+// التحقق من الـ token
+const params = new URLSearchParams(window.location.search);
+const token = params.get('token');
+
+const VALID_TOKEN = 'WOWHUB2026'; // غيّر هذا لأي كلمة سر تريدها
+
+let assignedKey = '';
+let expiresAt = '';
+
+function showState(id) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function formatDate(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch { return iso; }
+}
+
+function copyKey() {
+  if (!assignedKey) return;
+  navigator.clipboard.writeText(assignedKey).then(() => {
+    document.getElementById('copy-hint').textContent = '✅ تم النسخ!';
+    setTimeout(() => {
+      document.getElementById('copy-hint').textContent = 'اضغط لنسخ المفتاح';
+    }, 2000);
+  });
+}
+
+function goToVerify() {
+  if (assignedKey) {
+    window.location.href = `https://wowhub-webhook.vercel.app/index.html?key=${encodeURIComponent(assignedKey)}`;
+  }
+}
+
+async function getAvailableKey() {
+  // التحقق من الـ token
+  if (!token || token !== VALID_TOKEN) {
+    showState('state-error');
+    document.getElementById('error-msg').textContent = 'رابط غير صالح. أكمل المهام أولاً!';
+    return;
+  }
+
+  try {
+    const now = new Date().toISOString();
+
+    // جيب مفتاح غير مستخدم وغير منتهي
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/keys?used=is.false&expires_at=gt.${now}&hwid=is.null&limit=1&select=key,expires_at`,
+      {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      showState('state-error');
+      document.getElementById('error-msg').textContent = 'لا توجد مفاتيح متاحة حالياً. حاول لاحقاً!';
+      return;
+    }
+
+    const keyObj = data[0];
+    assignedKey = keyObj.key;
+    expiresAt = keyObj.expires_at;
+
+    // علّم المفتاح كـ "مستخدم"
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/keys?key=eq.${encodeURIComponent(assignedKey)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ used: true })
+      }
+    );
+
+    // اعرض المفتاح
+    document.getElementById('key-display').textContent = assignedKey;
+    document.getElementById('expires-display').textContent = formatDate(expiresAt);
+    showState('state-success');
+
+    // انتقل تلقائياً بعد 3 ثوان
+    setTimeout(() => {
+      goToVerify();
+    }, 3000);
+
+  } catch (err) {
+    showState('state-error');
+    document.getElementById('error-msg').textContent = 'خطأ في الاتصال: ' + err.message;
+  }
+}
+
+// جزيئات الخلفية
+const container = document.getElementById('particles');
+for (let i = 0; i < 25; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.cssText = `
+    left: ${Math.random() * 100}%;
+    animation-duration: ${6 + Math.random() * 10}s;
+    animation-delay: ${Math.random() * 8}s;
+    width: ${1 + Math.random() * 2}px;
+    height: ${1 + Math.random() * 2}px;
+    opacity: ${0.3 + Math.random() * 0.5};
+  `;
+  container.appendChild(p);
+}
+
+// ابدأ
+getAvailableKey();
+</script>
+</body>
+</html>
