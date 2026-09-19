@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await supabase
       .from('keys')
-      .select('key, expires_at, hwid')
+      .select('key, expires_at, hwid, activated_at')
       .eq('key', key)
       .single()
 
@@ -26,18 +26,25 @@ export default async function handler(req, res) {
       return res.status(403).json({ valid: false, message: 'Invalid key' })
     }
 
-    // تحقق من انتهاء الصلاحية
-    if (new Date() > new Date(data.expires_at)) {
-      return res.status(403).json({ valid: false, message: 'Key expired' })
-    }
-
-    // أول استخدام — سجل الـ hwid
+    // أول استخدام — سجل hwid + وقت التفعيل + expires_at يبدأ من الآن
     if (!data.hwid) {
+      const now = new Date()
+      const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000)
       await supabase
         .from('keys')
-        .update({ hwid: hwid })
+        .update({
+          hwid: hwid,
+          activated_at: now.toISOString(),
+          expires_at: expires.toISOString(),
+          used: true
+        })
         .eq('key', key)
       return res.status(200).json({ valid: true })
+    }
+
+    // تحقق من انتهاء الصلاحية (بعد التفعيل فقط)
+    if (new Date() > new Date(data.expires_at)) {
+      return res.status(403).json({ valid: false, message: 'Key expired' })
     }
 
     // تحقق إذا نفس الجهاز
