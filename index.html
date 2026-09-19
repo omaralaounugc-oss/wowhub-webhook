@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,8 +102,8 @@
     padding: 16px 20px; margin-bottom: 16px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
-  .key-label { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-align: right; }
-  .key-value { color: #a5b4fc; font-size: 20px; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 2px; word-break: break-all; text-align: right; }
+  .key-label { color: rgba(255,255,255,0.3); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-align: left; }
+  .key-value { color: #a5b4fc; font-size: 20px; font-weight: 700; font-family: 'Courier New', monospace; letter-spacing: 2px; word-break: break-all; text-align: left; }
   .copy-btn {
     background: linear-gradient(135deg, #4f46e5, #6d28d9);
     border: none; border-radius: 10px;
@@ -151,31 +151,31 @@
 
     <div class="state active" id="state-loading">
       <div class="spinner"></div>
-      <p>loading your key...</p>
+      <p>Loading your key...</p>
     </div>
 
     <div class="state" id="state-success">
       <div class="check-icon">✅</div>
-      <h2>your key is ready!</h2>
-      <p class="desc">copy the key and put it in the script</p>
+      <h2>Your key is ready!</h2>
+      <p class="desc">Copy the key and paste it into the script</p>
       <div class="key-box">
-        <div style="text-align:right; flex:1;">
-          <div class="key-label">your owen key</div>
+        <div style="text-align:left; flex:1;">
+          <div class="key-label">Your own key</div>
           <div class="key-value" id="key-display">—</div>
         </div>
         <button class="copy-btn" id="copy-btn" onclick="copyKey()">📋</button>
       </div>
       <div class="copy-toast" id="copy-toast"></div>
       <div class="expiry">
-        <span class="expiry-label">⏳its still working to</span>
+        <span class="expiry-label">⏳ Valid until</span>
         <span class="expiry-date" id="expiry-display">—</span>
       </div>
     </div>
 
     <div class="state" id="state-error">
       <span class="error-icon">❌</span>
-      <h2>حدث خطأ</h2>
-      <p id="error-msg">can't load the key</p>
+      <h2>An error occurred</h2>
+      <p id="error-msg">Can't load the key</p>
     </div>
 
     <div class="footer">Powered by <span>WowHub</span> • Key System v2</div>
@@ -183,7 +183,7 @@
 </div>
 
 <script>
-// جزيئات الخلفية
+// Background particles
 const container = document.getElementById('particles');
 for (let i = 0; i < 25; i++) {
   const p = document.createElement('div');
@@ -213,7 +213,7 @@ function showState(id) {
 function formatDate(iso) {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch { return iso; }
 }
 
@@ -222,12 +222,12 @@ let currentKey = '';
 async function loadKey() {
   if (!clickId || clickId === '{CLICK_ID}') {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'didnt find the link';
+    document.getElementById('error-msg').textContent = 'Link not found';
     return;
   }
 
   try {
-    // نبحث في Supabase عن المفتاح المرتبط بالـ CLICK_ID
+    // Search Supabase for the key linked to the CLICK_ID
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/keys?key=eq.${encodeURIComponent(clickId)}&select=key,expires_at`,
       {
@@ -241,7 +241,7 @@ async function loadKey() {
     const data = await res.json();
 
     if (!data || data.length === 0) {
-      // المفتاح ما وصل بعد — ننتظر ثواني ونحاول مجدداً
+      // Key not ready yet — wait a few seconds and retry
       await new Promise(r => setTimeout(r, 3000));
       return loadKey();
     }
@@ -254,7 +254,7 @@ async function loadKey() {
 
   } catch (err) {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'error loading the information';
+    document.getElementById('error-msg').textContent = 'Error loading information';
   }
 }
 
@@ -265,7 +265,7 @@ function copyKey() {
     const toast = document.getElementById('copy-toast');
     btn.classList.add('copied');
     btn.textContent = '✅';
-    toast.textContent = '✓  copied!';
+    toast.textContent = '✓  Copied!';
     setTimeout(() => {
       btn.classList.remove('copied');
       btn.textContent = '📋';
