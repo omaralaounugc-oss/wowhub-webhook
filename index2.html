@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WowHub - جاري تحميل مفتاحك...</title>
+<title>WowHub - Loading your key...</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -100,7 +100,7 @@
     transition: background 0.2s;
   }
   .key-box:hover { background: rgba(108,99,255,0.2); }
-  .key-label { font-size: 11px; color: #888; margin-bottom: 4px; text-align: right; }
+  .key-label { font-size: 11px; color: #888; margin-bottom: 4px; text-align: left; }
   .key-value { font-size: 15px; font-weight: bold; color: white; letter-spacing: 1px; }
   .copy-icon { font-size: 20px; opacity: 0.6; }
   .copy-hint { font-size: 11px; color: #666; margin-bottom: 20px; }
@@ -165,37 +165,37 @@
   <!-- Loading -->
   <div id="state-loading" class="state active">
     <div class="spinner"></div>
-    <div class="loading-text">جاري تحضير مفتاحك...</div>
+    <div class="loading-text">Preparing your key...</div>
   </div>
 
   <!-- Success -->
   <div id="state-success" class="state">
     <div class="success-icon">✅</div>
-    <div class="success-title">مفتاحك جاهز!</div>
-    <div class="success-msg">انسخ المفتاح وأدخله في السكريبت</div>
+    <div class="success-title">Your key is ready!</div>
+    <div class="success-msg">Copy the key and enter it in the script</div>
 
-    <div class="key-label">مفتاحك الخاص</div>
+    <div class="key-label">Your own key</div>
     <div class="key-box" onclick="copyKey()">
       <div>
         <div class="key-value" id="key-display">-</div>
       </div>
       <div class="copy-icon">📋</div>
     </div>
-    <div class="copy-hint" id="copy-hint">اضغط لنسخ المفتاح</div>
+    <div class="copy-hint" id="copy-hint">Click to copy the key</div>
 
     <div class="expires-box">
-      <span>⏳ صالح حتى</span>
+      <span>⏳ Valid until</span>
       <span id="expires-display">-</span>
     </div>
 
-    <button class="btn-redirect" onclick="goToVerify()">فتح صفحة التحقق ←</button>
+    <button class="btn-redirect" onclick="goToVerify()">Open Verification Page →</button>
   </div>
 
   <!-- Error -->
   <div id="state-error" class="state">
     <div class="error-icon">❌</div>
-    <div class="error-title">حدث خطأ</div>
-    <div class="error-msg" id="error-msg">لا توجد مفاتيح متاحة حالياً</div>
+    <div class="error-title">An error occurred</div>
+    <div class="error-msg" id="error-msg">No keys available at the moment</div>
   </div>
 
   <div class="footer">Powered by <a href="#">WowHub</a> • Key System v2</div>
@@ -205,11 +205,11 @@
 const SUPABASE_URL = 'https://dmxiyythvdeesolugjej.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGl5eXRodmRlZXNvbHVnamVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTA0NjQsImV4cCI6MjA2NzE4NjQ2NH0.5XWdXplG5NM0AzOtgZdoLQHKsBgnj-Ookl7WeWnaeFQ';
 
-// التحقق من الـ token
+// Verify the token
 const params = new URLSearchParams(window.location.search);
 const token = params.get('token');
 
-const VALID_TOKEN = 'WOWHUB2026'; // غيّر هذا لأي كلمة سر تريدها
+const VALID_TOKEN = 'WOWHUB2026'; // Change this to any password you want
 
 let assignedKey = '';
 let expiresAt = '';
@@ -222,16 +222,16 @@ function showState(id) {
 function formatDate(iso) {
   try {
     const d = new Date(iso);
-    return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch { return iso; }
 }
 
 function copyKey() {
   if (!assignedKey) return;
   navigator.clipboard.writeText(assignedKey).then(() => {
-    document.getElementById('copy-hint').textContent = '✅ تم النسخ!';
+    document.getElementById('copy-hint').textContent = '✅ Copied!';
     setTimeout(() => {
-      document.getElementById('copy-hint').textContent = 'اضغط لنسخ المفتاح';
+      document.getElementById('copy-hint').textContent = 'Click to copy the key';
     }, 2000);
   });
 }
@@ -245,7 +245,7 @@ function goToVerify() {
 async function getAvailableKey() {
   if (!token || token !== VALID_TOKEN) {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'رابط غير صالح. أكمل المهام أولاً!';
+    document.getElementById('error-msg').textContent = 'Invalid link. Complete the tasks first!';
     return;
   }
 
@@ -255,7 +255,7 @@ async function getAvailableKey() {
 
     if (!res.ok || !data.key) {
       showState('state-error');
-      document.getElementById('error-msg').textContent = data.error || 'لا توجد مفاتيح متاحة';
+      document.getElementById('error-msg').textContent = data.error || 'No keys available';
       return;
     }
 
@@ -272,12 +272,11 @@ async function getAvailableKey() {
 
   } catch (err) {
     showState('state-error');
-    document.getElementById('error-msg').textContent = 'خطأ في الاتصال: ' + err.message;
+    document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
   }
 }
 
-
-// ابدأ
+// Start
 getAvailableKey();
 </script>
 </body>
