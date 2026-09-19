@@ -8,6 +8,10 @@
     {
       "src": "index.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "index2.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -22,6 +26,10 @@
     {
       "src": "/index.html",
       "dest": "/index.html"
+    },
+    {
+      "src": "/index2.html",
+      "dest": "/index2.html"
     }
   ]
 }
