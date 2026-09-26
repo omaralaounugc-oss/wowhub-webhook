@@ -213,8 +213,6 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'https://dmxiyythvdeesolugjej.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGl5eXRodmRlZXNvbHVnamVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2MTA0NjQsImV4cCI6MjA2NzE4NjQ2NH0.5XWdXplG5NM0AzOtgZdoLQHKsBgnj-Ookl7WeWnaeFQ';
 
 // Verify the token
 const params = new URLSearchParams(window.location.search);
@@ -254,19 +252,6 @@ function goToVerify() {
 }
 
 async function getAvailableKey() {
-  // Check if user already has a key stored
-  const stored = localStorage.getItem('wowhub_key');
-  const storedExpiry = localStorage.getItem('wowhub_key_expiry');
-  
-  if (stored && storedExpiry && new Date(storedExpiry) > new Date()) {
-    assignedKey = stored;
-    expiresAt = storedExpiry;
-    document.getElementById('key-display').textContent = assignedKey;
-    document.getElementById('expires-display').textContent = formatDate(expiresAt);
-    showState('state-success');
-    return;
-  }
-
   if (!token || token !== VALID_TOKEN) {
     showState('state-error');
     document.getElementById('error-msg').textContent = 'Invalid link. Complete the tasks first!';
@@ -286,19 +271,21 @@ async function getAvailableKey() {
     assignedKey = data.key;
     expiresAt = data.expires_at;
 
-    // Store in localStorage to prevent getting new key on refresh
-    localStorage.setItem('wowhub_key', assignedKey);
-    localStorage.setItem('wowhub_key_expiry', expiresAt);
-
     document.getElementById('key-display').textContent = assignedKey;
     document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
+
+    setTimeout(() => {
+      goToVerify();
+    }, 3000);
 
   } catch (err) {
     showState('state-error');
     document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
   }
 }
+
+// Start
 getAvailableKey();
 </script>
 </body>
