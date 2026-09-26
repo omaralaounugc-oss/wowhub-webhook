@@ -1,44 +1,43 @@
-import { createClient } from '@supabase/supabase-js'
+import { neon } from '@neondatabase/serverless';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-)
+const sql = neon(process.env.DATABASE_URL);
+
+const VALID_TOKEN = 'WOWHUB2026';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { token } = req.query
-  if (token !== 'WOWHUB2026') {
-    return res.status(403).json({ error: 'Invalid token' })
+  const { token } = req.query;
+  if (token !== VALID_TOKEN) {
+    return res.status(403).json({ error: 'Invalid token' });
   }
 
   try {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('keys')
-      .select('key, expires_at')
-      .eq('used', false)
-      .is('hwid', null)
-      .gt('expires_at', now)
-      .order('expires_at', { ascending: true })
-      .limit(1)
-      .single()
+    const rows = await sql`
+      SELECT key, expires_at FROM keys
+      WHERE used = false
+      AND hwid IS NULL
+      AND expires_at > ${now}
+      ORDER BY expires_at ASC
+      LIMIT 1
+    `;
 
-    if (error || !data) {
-      return res.status(404).json({ error: 'No keys available' })
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'No keys available' });
     }
 
-    await supabase
-      .from('keys')
-      .update({ used: true })
-      .eq('key', data.key)
+    const data = rows[0];
 
-    return res.status(200).json({ key: data.key, expires_at: data.expires_at })
+    await sql`
+      UPDATE keys SET used = true WHERE key = ${data.key}
+    `;
+
+    return res.status(200).json({ key: data.key, expires_at: data.expires_at });
   } catch (err) {
-    return res.status(500).json({ error: err.message })
+    return res.status(500).json({ error: err.message });
   }
 }
