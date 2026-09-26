@@ -271,6 +271,7 @@ async function getAvailableKey() {
     return;
   }
 
+  // Check localStorage first — reuse key if not expired
   const storedKey = localStorage.getItem('wowhub_key');
   const storedExpiry = localStorage.getItem('wowhub_key_expiry');
   if (storedKey && storedExpiry && new Date(storedExpiry) > new Date()) {
