@@ -229,11 +229,12 @@ for (let i = 0; i < 25; i++) {
   container.appendChild(p);
 }
 
-const SUPABASE_URL = 'https://dmxiyythvdeesolugjej.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRteGl5eXRodmRlZXNvbHVnamVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NDY5MTQsImV4cCI6MjEwNTIyMjkxNH0.5XWdXplG5NMOAzOtgZdoLQHKsBgnj-Ookl7WeWnaeFQ';
-
+const VALID_TOKEN = 'WOWHUB2026';
 const params = new URLSearchParams(window.location.search);
-const clickId = params.get('key');
+const token = params.get('token');
+
+let assignedKey = '';
+let expiresAt = '';
 
 function showState(id) {
   document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
@@ -247,64 +248,69 @@ function formatDate(iso) {
   } catch { return iso; }
 }
 
-let currentKey = '';
-
-async function loadKey() {
-  if (!clickId || clickId === '{CLICK_ID}') {
-    showState('state-error');
-    document.getElementById('error-msg').textContent = 'Link not found';
-    return;
-  }
-
-  try {
-    // Search Supabase for the key linked to the CLICK_ID
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/keys?key=eq.${encodeURIComponent(clickId)}&select=key,expires_at`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        }
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data || data.length === 0) {
-      // Key not ready yet — wait a few seconds and retry
-      await new Promise(r => setTimeout(r, 3000));
-      return loadKey();
-    }
-
-    const record = data[0];
-    currentKey = record.key;
-    document.getElementById('key-display').textContent = currentKey;
-    document.getElementById('expiry-display').textContent = formatDate(record.expires_at);
-    showState('state-success');
-
-  } catch (err) {
-    showState('state-error');
-    document.getElementById('error-msg').textContent = 'Error loading information';
-  }
-}
-
 function copyKey() {
-  if (!currentKey) return;
-  navigator.clipboard.writeText(currentKey).then(() => {
-    const btn = document.getElementById('copy-btn');
-    const toast = document.getElementById('copy-toast');
-    btn.classList.add('copied');
-    btn.textContent = '✅';
-    toast.textContent = '✓  Copied!';
+  if (!assignedKey) return;
+  navigator.clipboard.writeText(assignedKey).then(() => {
+    document.getElementById('copy-hint').textContent = '✅ Copied!';
     setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.textContent = '📋';
-      toast.textContent = '';
+      document.getElementById('copy-hint').textContent = 'Click to copy the key';
     }, 2000);
   });
 }
 
-loadKey();
+function goToVerify() {
+  if (assignedKey) {
+    window.location.href = `https://wowhub-webhook.vercel.app/index.html?key=${encodeURIComponent(assignedKey)}`;
+  }
+}
+
+async function getAvailableKey() {
+  if (!token || token !== VALID_TOKEN) {
+    showState('state-error');
+    document.getElementById('error-msg').textContent = 'Invalid link. Complete the tasks first!';
+    return;
+  }
+
+  const storedKey = localStorage.getItem('wowhub_key');
+  const storedExpiry = localStorage.getItem('wowhub_key_expiry');
+  if (storedKey && storedExpiry && new Date(storedExpiry) > new Date()) {
+    assignedKey = storedKey;
+    expiresAt = storedExpiry;
+    document.getElementById('key-display').textContent = assignedKey;
+    document.getElementById('expires-display').textContent = formatDate(expiresAt);
+    showState('state-success');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/getkey?token=${token}`);
+    const data = await res.json();
+
+    if (!res.ok || !data.key) {
+      showState('state-error');
+      document.getElementById('error-msg').textContent = data.error || 'No keys available';
+      return;
+    }
+
+    assignedKey = data.key;
+    expiresAt = data.expires_at;
+
+    localStorage.setItem('wowhub_key', assignedKey);
+    localStorage.setItem('wowhub_key_expiry', expiresAt);
+
+    document.getElementById('key-display').textContent = assignedKey;
+    document.getElementById('expires-display').textContent = formatDate(expiresAt);
+    showState('state-success');
+
+    setTimeout(() => goToVerify(), 3000);
+
+  } catch (err) {
+    showState('state-error');
+    document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
+  }
+}
+
+getAvailableKey();
 </script>
 </body>
 </html>
