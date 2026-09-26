@@ -254,6 +254,19 @@ function goToVerify() {
 }
 
 async function getAvailableKey() {
+  // Check if user already has a key stored
+  const stored = localStorage.getItem('wowhub_key');
+  const storedExpiry = localStorage.getItem('wowhub_key_expiry');
+  
+  if (stored && storedExpiry && new Date(storedExpiry) > new Date()) {
+    assignedKey = stored;
+    expiresAt = storedExpiry;
+    document.getElementById('key-display').textContent = assignedKey;
+    document.getElementById('expires-display').textContent = formatDate(expiresAt);
+    showState('state-success');
+    return;
+  }
+
   if (!token || token !== VALID_TOKEN) {
     showState('state-error');
     document.getElementById('error-msg').textContent = 'Invalid link. Complete the tasks first!';
@@ -273,21 +286,19 @@ async function getAvailableKey() {
     assignedKey = data.key;
     expiresAt = data.expires_at;
 
+    // Store in localStorage to prevent getting new key on refresh
+    localStorage.setItem('wowhub_key', assignedKey);
+    localStorage.setItem('wowhub_key_expiry', expiresAt);
+
     document.getElementById('key-display').textContent = assignedKey;
     document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
-
-    setTimeout(() => {
-      goToVerify();
-    }, 3000);
 
   } catch (err) {
     showState('state-error');
     document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
   }
 }
-
-// Start
 getAvailableKey();
 </script>
 </body>
