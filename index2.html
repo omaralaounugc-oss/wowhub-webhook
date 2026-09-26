@@ -247,9 +247,10 @@ function copyKey() {
 
 function goToVerify() {
   if (assignedKey) {
-    window.location.href = `https://wowhub-webhook.vercel.app/index.html?key=${encodeURIComponent(assignedKey)}`;
+    window.location.href = `https://wowhub-webhook.vercel.app/index.html?key=${encodeURIComponent(assignedKey)}&token=WOWHUB2026`;
   }
 }
+
 
 async function getAvailableKey() {
   if (!token || token !== VALID_TOKEN) {
