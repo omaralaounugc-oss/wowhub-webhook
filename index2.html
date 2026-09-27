@@ -224,11 +224,6 @@
 
     <div class="expires-box">
       <span>⏳ Valid until</span>
-      <span id="expires-display">-</span>
-    </div>
-
-    <div class="expires-box" style="justify-content:center; gap:8px;">
-      <span>⏱ Expires in</span>
       <span id="countdown-display" style="font-weight:bold; color:#6c63ff; font-size:15px; letter-spacing:2px;">--:--:--</span>
     </div>
 
@@ -293,10 +288,8 @@ function showCachedKey(key, expiry) {
   assignedKey = key;
   expiresAt = expiry;
   document.getElementById('key-display').textContent = assignedKey;
-  document.getElementById('expires-display').textContent = formatDate(expiresAt);
   showState('state-success');
   startCountdown(expiresAt);
-  setTimeout(() => { goToVerify(); }, 3000);
 }
 
 // Called when player clicks "creat a new one here!"
@@ -351,11 +344,8 @@ async function getAvailableKey() {
     localStorage.setItem('wowhub_key_expiry', expiresAt);
 
     document.getElementById('key-display').textContent = assignedKey;
-    document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
     startCountdown(expiresAt);
-
-    setTimeout(() => { goToVerify(); }, 3000);
 
   } catch (err) {
     showState('state-error');
