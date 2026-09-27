@@ -213,12 +213,9 @@
 </div>
 
 <script>
-
-// Verify the token
-const params = new URLSearchParams(window.location.search);
+ const params = new URLSearchParams(window.location.search);
 const token = params.get('token');
-
-const VALID_TOKEN = 'WOWHUB2026'; // Change this to any password you want
+const VALID_TOKEN = 'WOWHUB2026';
 
 let assignedKey = '';
 let expiresAt = '';
@@ -251,6 +248,14 @@ function goToVerify() {
   }
 }
 
+function showCachedKey(key, expiry) {
+  assignedKey = key;
+  expiresAt = expiry;
+  document.getElementById('key-display').textContent = assignedKey;
+  document.getElementById('expires-display').textContent = formatDate(expiresAt);
+  showState('state-success');
+  setTimeout(() => { goToVerify(); }, 3000);
+}
 
 async function getAvailableKey() {
   if (!token || token !== VALID_TOKEN) {
@@ -259,6 +264,17 @@ async function getAvailableKey() {
     return;
   }
 
+  // ✅ CHECK CACHE FIRST — if valid key exists, reuse it, don't fetch new one
+  const cachedKey = localStorage.getItem('wowhub_key');
+  const cachedExpiry = localStorage.getItem('wowhub_key_expiry');
+
+  if (cachedKey && cachedExpiry && new Date(cachedExpiry) > new Date()) {
+    // Valid cached key — show it without hitting the API
+    showCachedKey(cachedKey, cachedExpiry);
+    return;
+  }
+
+  // No valid cache — fetch a new key from API
   try {
     const res = await fetch(`/api/getkey?token=${token}`);
     const data = await res.json();
@@ -272,13 +288,15 @@ async function getAvailableKey() {
     assignedKey = data.key;
     expiresAt = data.expires_at;
 
+    // ✅ SAVE to localStorage so refreshes reuse this key
+    localStorage.setItem('wowhub_key', assignedKey);
+    localStorage.setItem('wowhub_key_expiry', expiresAt);
+
     document.getElementById('key-display').textContent = assignedKey;
     document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
 
-    setTimeout(() => {
-      goToVerify();
-    }, 3000);
+    setTimeout(() => { goToVerify(); }, 3000);
 
   } catch (err) {
     showState('state-error');
@@ -286,7 +304,6 @@ async function getAvailableKey() {
   }
 }
 
-// Start
 getAvailableKey();
 </script>
 </body>
