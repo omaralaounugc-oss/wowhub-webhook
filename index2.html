@@ -227,7 +227,12 @@
       <span id="expires-display">-</span>
     </div>
 
-    <button class="btn-redirect" onclick="goToVerify()">Open Verification Page →</button>
+    <div class="expires-box" style="justify-content:center; gap:8px;">
+      <span>⏱ Expires in</span>
+      <span id="countdown-display" style="font-weight:bold; color:#6c63ff; font-size:15px; letter-spacing:2px;">--:--:--</span>
+    </div>
+
+    <div id="expired-inline" style="display:none; color:#ef4444; font-size:14px; font-weight:bold; margin-top:8px;">Your key has expired</div>
   </div>
 
   <!-- Key Expired -->
@@ -290,6 +295,7 @@ function showCachedKey(key, expiry) {
   document.getElementById('key-display').textContent = assignedKey;
   document.getElementById('expires-display').textContent = formatDate(expiresAt);
   showState('state-success');
+  startCountdown(expiresAt);
   setTimeout(() => { goToVerify(); }, 3000);
 }
 
@@ -347,6 +353,7 @@ async function getAvailableKey() {
     document.getElementById('key-display').textContent = assignedKey;
     document.getElementById('expires-display').textContent = formatDate(expiresAt);
     showState('state-success');
+    startCountdown(expiresAt);
 
     setTimeout(() => { goToVerify(); }, 3000);
 
@@ -355,6 +362,38 @@ async function getAvailableKey() {
     document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
   }
 }
+
+// ── Countdown Timer ──────────────────────────────────────────────
+let countdownInterval = null;
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function startCountdown(expiryIso) {
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  function tick() {
+    const now  = new Date();
+    const end  = new Date(expiryIso);
+    const diff = end - now;
+
+    if (diff <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('countdown-display').textContent = '00:00:00';
+      document.getElementById('expired-inline').style.display = 'block';
+      return;
+    }
+
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('countdown-display').textContent =
+      `${pad(h)}:${pad(m)}:${pad(s)}`;
+  }
+
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+// ─────────────────────────────────────────────────────────────────
 
 getAvailableKey();
 </script>
