@@ -196,10 +196,18 @@
 
     <div class="expires-box">
       <span>⏳ Valid until</span>
-      <span id="expires-display">-</span>
+      <span id="countdown-display" style="font-weight:bold; color:#6c63ff; font-size:15px; letter-spacing:2px;">--:--:--</span>
     </div>
+  </div>
 
-    <button class="btn-redirect" onclick="goToVerify()">Open Verification Page →</button>
+  <!-- Expired -->
+  <div id="state-expired" class="state">
+    <div class="success-icon" style="background:rgba(251,191,36,0.15);">⏰</div>
+    <div class="success-title" style="color:#fbbf24;">Your key has expired!</div>
+    <div class="success-msg">Get a new one by completing the quick task below</div>
+    <button class="btn-redirect" onclick="getNewKey()" style="background:linear-gradient(135deg,#6c63ff,#a78bfa);border:none;margin-top:8px;">
+      Create a new one here! →
+    </button>
   </div>
 
   <!-- Error -->
@@ -213,7 +221,7 @@
 </div>
 
 <script>
-// Background particles
+// ── Background particles ──────────────────────────────────────────
 const container = document.getElementById('particles');
 for (let i = 0; i < 25; i++) {
   const p = document.createElement('div');
@@ -229,28 +237,16 @@ for (let i = 0; i < 25; i++) {
   container.appendChild(p);
 }
 
-const VALID_TOKEN = 'WOWHUB2026';
-const params = new URLSearchParams(window.location.search);
-const token = params.get('token');
-
-let assignedKey = '';
-let expiresAt = '';
-
+// ── State helpers ─────────────────────────────────────────────────
 function showState(id) {
   document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-function formatDate(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  } catch { return iso; }
-}
-
 function copyKey() {
-  if (!assignedKey) return;
-  navigator.clipboard.writeText(assignedKey).then(() => {
+  const key = document.getElementById('key-display').textContent;
+  if (!key || key === '-') return;
+  navigator.clipboard.writeText(key).then(() => {
     document.getElementById('copy-hint').textContent = '✅ Copied!';
     setTimeout(() => {
       document.getElementById('copy-hint').textContent = 'Click to copy the key';
@@ -258,60 +254,66 @@ function copyKey() {
   });
 }
 
-function goToVerify() {
-  if (assignedKey) {
-    window.location.href = `https://wowhub-webhook.vercel.app/index.html?key=${encodeURIComponent(assignedKey)}`;
-  }
+function getNewKey() {
+  localStorage.removeItem('wowhub_key');
+  localStorage.removeItem('wowhub_key_expiry');
+  window.location.href = 'https://loot-link.com/s?9diqLQbJ';
 }
 
-async function getAvailableKey() {
-  if (!token || token !== VALID_TOKEN) {
-    showState('state-error');
-    document.getElementById('error-msg').textContent = 'Invalid link. Complete the tasks first!';
-    return;
-  }
+// ── Countdown timer ───────────────────────────────────────────────
+let countdownInterval = null;
+function pad(n) { return String(n).padStart(2, '0'); }
 
-  // Check localStorage first — reuse key if not expired
-  const storedKey = localStorage.getItem('wowhub_key');
-  const storedExpiry = localStorage.getItem('wowhub_key_expiry');
-  if (storedKey && storedExpiry && new Date(storedExpiry) > new Date()) {
-    assignedKey = storedKey;
-    expiresAt = storedExpiry;
-    document.getElementById('key-display').textContent = assignedKey;
-    document.getElementById('expires-display').textContent = formatDate(expiresAt);
-    showState('state-success');
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/getkey?token=${token}`);
-    const data = await res.json();
-
-    if (!res.ok || !data.key) {
-      showState('state-error');
-      document.getElementById('error-msg').textContent = data.error || 'No keys available';
+function startCountdown(expiryIso) {
+  if (countdownInterval) clearInterval(countdownInterval);
+  function tick() {
+    const diff = new Date(expiryIso) - new Date();
+    if (diff <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('countdown-display').textContent = '00:00:00';
+      // Key expired while user is looking — show expired state
+      localStorage.removeItem('wowhub_key');
+      localStorage.removeItem('wowhub_key_expiry');
+      showState('state-expired');
       return;
     }
-
-    assignedKey = data.key;
-    expiresAt = data.expires_at;
-
-    localStorage.setItem('wowhub_key', assignedKey);
-    localStorage.setItem('wowhub_key_expiry', expiresAt);
-
-    document.getElementById('key-display').textContent = assignedKey;
-    document.getElementById('expires-display').textContent = formatDate(expiresAt);
-    showState('state-success');
-
-    setTimeout(() => goToVerify(), 3000);
-
-  } catch (err) {
-    showState('state-error');
-    document.getElementById('error-msg').textContent = 'Connection error: ' + err.message;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('countdown-display').textContent =
+      pad(h) + ':' + pad(m) + ':' + pad(s);
   }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
 }
 
-getAvailableKey();
+// ── Main: read key from URL params sent by index3neon ────────────
+(function init() {
+  const params  = new URLSearchParams(window.location.search);
+  const key     = params.get('key');
+  const expiry  = params.get('expiry');
+
+  // No key in URL? Redirect to the bridge
+  if (!key || !expiry) {
+    showState('state-error');
+    document.getElementById('error-msg').textContent =
+      'No key found. Please complete the task first.';
+    return;
+  }
+
+  // Key already expired?
+  if (new Date(expiry) <= new Date()) {
+    localStorage.removeItem('wowhub_key');
+    localStorage.removeItem('wowhub_key_expiry');
+    showState('state-expired');
+    return;
+  }
+
+  // All good — show key + timer
+  document.getElementById('key-display').textContent = key;
+  showState('state-success');
+  startCountdown(expiry);
+})();
 </script>
 </body>
 </html>
