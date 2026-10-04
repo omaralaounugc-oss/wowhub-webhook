@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     await sql`DELETE FROM keys WHERE expires_at < NOW()`;
 
     // Add 500 new keys
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     for (let i = 0; i < 500; i++) {
       const key = generateKey();
       await sql`
