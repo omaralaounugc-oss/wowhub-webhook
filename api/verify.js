@@ -41,24 +41,25 @@ export default async function handler(req, res) {
       return res.status(403).json({ valid: false, message: 'Invalid key' });
     }
 
-    const data = rows[0];
+        const data = rows[0];
 
-    // First use — bind hwid and start 24h timer
+    // Check expiry (timer started when the key was shown)
+    if (new Date() > new Date(data.expires_at)) {
+      return res.status(403).json({ valid: false, message: 'Key expired' });
+    }
+
+    // First use: only bind the device, do NOT touch the timer
     if (!data.hwid) {
-      const activatedAt = new Date();
-      const expiresAt = new Date(activatedAt.getTime() + 24 * 60 * 60 * 1000);
-
-      await sql`
-        UPDATE keys SET
-          hwid = ${hwid},
-          activated_at = ${activatedAt.toISOString()},
-          expires_at = ${expiresAt.toISOString()},
-          used = true
-        WHERE key = ${key}
-      `;
-
+      await sql`UPDATE keys SET hwid = ${hwid} WHERE key = ${key}`;
       return res.status(200).json({ valid: true });
     }
+
+    // Check device
+    if (data.hwid !== hwid) {
+      return res.status(403).json({ valid: false, message: 'Key used on another device' });
+    }
+
+    return res.status(200).json({ valid: true });
 
     // Check expiry
     if (new Date() > new Date(data.expires_at)) {
