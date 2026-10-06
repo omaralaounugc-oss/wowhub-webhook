@@ -16,6 +16,9 @@ export default async function handler(req, res) {
     // 1. Delete expired keys (used keys after 24h, unused keys after 7 days)
     await sql`DELETE FROM keys WHERE expires_at < NOW()`;
 
+    // 1b. Clean up old one-time sessions
+    await sql`DELETE FROM sessions WHERE created_at < NOW() - INTERVAL '1 day'`;
+
     // 2. Count what's left
     const result = await sql`SELECT COUNT(*)::int AS count FROM keys`;
     const total = result[0].count;
