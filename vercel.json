@@ -6,7 +6,7 @@
     { "src": "index2.html", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/webhook", "dest": "/api/webhook.js" },
+    { "src": "/api/start", "dest": "/api/start.js" },
     { "src": "/api/verify", "dest": "/api/verify.js" },
     { "src": "/api/getkey", "dest": "/api/getkey.js" },
     { "src": "/api/cron", "dest": "/api/cron.js" },
