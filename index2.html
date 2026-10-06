@@ -29,13 +29,12 @@
 <div class="spinner"></div>
 <script>
 (async function() {
-  const VALID_TOKEN = 'WOWHUB2026';
   const BASE_URL = 'https://wowhub-webhook.vercel.app/index.html';
 
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
+  const nonce = params.get('nonce');
 
-  // --- Helper: redirect to external index.html ---
+  // --- Helper: redirect to index.html (with key if we have one) ---
   function goToIndex(key = '', expiresAt = '') {
     let dest = BASE_URL;
     if (key && expiresAt) {
@@ -44,31 +43,29 @@
     window.location.replace(dest);
   }
 
-  // Token check
-  if (!token || token !== VALID_TOKEN) {
-    goToIndex();
-    return;
-  }
-
-  // --- Check cached key ---
+  // --- 1) Cached key still valid? Skip everything ---
   const cachedKey    = localStorage.getItem('wowhub_key');
   const cachedExpiry = localStorage.getItem('wowhub_key_expiry');
 
   if (cachedKey && cachedExpiry) {
     if (new Date(cachedExpiry) > new Date()) {
-      // Valid key — skip everything, go straight to vercel site
       goToIndex(cachedKey, cachedExpiry);
       return;
     } else {
-      // Expired — clear cache
       localStorage.removeItem('wowhub_key');
       localStorage.removeItem('wowhub_key_expiry');
     }
   }
 
-  // --- No valid cached key: fetch from API ---
+  // --- 2) No session from Loot Labs? Show the "complete the task" error ---
+  if (!nonce) {
+    goToIndex();
+    return;
+  }
+
+  // --- 3) Exchange the one-time session for a key ---
   try {
-    const res  = await fetch('/api/getkey?token=' + token);
+    const res  = await fetch('/api/getkey?nonce=' + encodeURIComponent(nonce));
     const data = await res.json();
 
     if (!res.ok || !data.key) {
@@ -81,7 +78,6 @@
     goToIndex(data.key, data.expires_at);
 
   } catch (e) {
-    // Network error — go to vercel site
     goToIndex();
   }
 })();
