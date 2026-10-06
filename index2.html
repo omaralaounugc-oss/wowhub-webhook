@@ -35,7 +35,6 @@
 
   // Token check
   if (!token || token !== VALID_TOKEN) {
-    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
     return;
   }
 
@@ -68,8 +67,7 @@
     const data = await res.json();
 
     if (!res.ok || !data.key) {
-      // No key available — send back to lootlabs
-      window.location.href = 'https://loot-link.com/s?9diqLQbJ';
+      // No key available — do nothing
       return;
     }
 
@@ -78,8 +76,7 @@
     goToIndex(data.key, data.expires_at);
 
   } catch (e) {
-    // Network error — send back to lootlabs
-    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
+    // Network error — do nothing
   }
 })();
 </script>
