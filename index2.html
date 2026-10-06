@@ -30,11 +30,16 @@
 <script>
 (async function() {
   const VALID_TOKEN = 'WOWHUB2026';
+
+  // >>> CHANGE THIS to the link you want players sent to instead of LootLabs <<<
+  const OTHER_LINK = 'index.html';
+
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
 
   // Token check
   if (!token || token !== VALID_TOKEN) {
+    window.location.href = OTHER_LINK;
     return;
   }
 
@@ -67,7 +72,8 @@
     const data = await res.json();
 
     if (!res.ok || !data.key) {
-      // No key available — do nothing
+      // No key available — send to the other link
+      window.location.href = OTHER_LINK;
       return;
     }
 
@@ -76,7 +82,8 @@
     goToIndex(data.key, data.expires_at);
 
   } catch (e) {
-    // Network error — do nothing
+    // Network error — send to the other link
+    window.location.href = OTHER_LINK;
   }
 })();
 </script>
