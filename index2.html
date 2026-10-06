@@ -3,67 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WowHub</title>
+<title>WowHub - Loading...</title>
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; background: #0a0a1a; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: 
+#0a0a1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(108,99,255,0.2);
+    border-top-color: 
+#6c63ff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-<!-- Invisible bridge page: nothing is shown, it only fetches the key and forwards it -->
+<div class="spinner"></div>
 <script>
 (async function() {
   const VALID_TOKEN = 'WOWHUB2026';
-  const KEY_PAGE    = 'index.html';
-
   const params = new URLSearchParams(window.location.search);
-  const token  = params.get('token');
+  const token = params.get('token');
 
-  // Bad / missing token -> go to key page with no data (it shows its own error)
+  // Token check
   if (!token || token !== VALID_TOKEN) {
-    window.location.replace(KEY_PAGE);
+    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
     return;
   }
 
-  // Send key + expiry to the key page
+  // --- Helper: redirect to index.html with key data ---
   function goToIndex(key, expiresAt) {
-    window.location.replace(
-      KEY_PAGE + '?key=' + encodeURIComponent(key) +
-      '&expiry=' + encodeURIComponent(expiresAt)
-    );
+    const dest = 'index.html?key=' + encodeURIComponent(key)
+                + '&expiry=' + encodeURIComponent(expiresAt);
+    window.location.replace(dest);
   }
 
-  // Already has a still-valid key on this browser? Reuse it.
-  try {
-    const cachedKey    = localStorage.getItem('wowhub_key');
-    const cachedExpiry = localStorage.getItem('wowhub_key_expiry');
-    if (cachedKey && cachedExpiry) {
-      if (new Date(cachedExpiry) > new Date()) {
-        goToIndex(cachedKey, cachedExpiry);
-        return;
-      }
+  // --- Check cached key ---
+  const cachedKey    = localStorage.getItem('wowhub_key');
+  const cachedExpiry = localStorage.getItem('wowhub_key_expiry');
+
+  if (cachedKey && cachedExpiry) {
+    if (new Date(cachedExpiry) > new Date()) {
+      // Valid key — skip everything, go straight to index.html
+      goToIndex(cachedKey, cachedExpiry);
+      return;
+    } else {
+      // Expired — clear cache
       localStorage.removeItem('wowhub_key');
       localStorage.removeItem('wowhub_key_expiry');
     }
-  } catch (e) {}
+  }
 
-  // Get a fresh key (and its time) from Neon through the API
+  // --- No valid cached key: fetch from API ---
   try {
-    const res  = await fetch('/api/getkey?token=' + encodeURIComponent(token));
+    const res  = await fetch('/api/getkey?token=' + token);
     const data = await res.json();
 
     if (!res.ok || !data.key) {
-      window.location.replace(KEY_PAGE);
+      // No key available — send back to lootlabs
+      window.location.href = 'https://loot-link.com/s?9diqLQbJ';
       return;
     }
 
-    try {
-      localStorage.setItem('wowhub_key',        data.key);
-      localStorage.setItem('wowhub_key_expiry', data.expires_at);
-    } catch (e) {}
-
+    localStorage.setItem('wowhub_key',        data.key);
+    localStorage.setItem('wowhub_key_expiry', data.expires_at);
     goToIndex(data.key, data.expires_at);
+
   } catch (e) {
-    window.location.replace(KEY_PAGE);
+    // Network error — send back to lootlabs
+    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
   }
 })();
 </script>
