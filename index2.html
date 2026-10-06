@@ -33,17 +33,21 @@
   const BASE_URL = 'https://wowhub-webhook.vercel.app/index.html';
 
   const params = new URLSearchParams(window.location.search);
-  // إذا لم يتم إرسال token في الرابط، نستخدم الـ VALID_TOKEN لتشغيل getkey دائماً
-  const token = params.get('token') || VALID_TOKEN;
+  const token = params.get('token');
 
   // --- Helper: redirect to external index.html ---
-  function goToIndex(key, expiresAt) {
+  function goToIndex(key = '', expiresAt = '') {
+    let dest = BASE_URL;
     if (key && expiresAt) {
-      const dest = BASE_URL + '?key=' + encodeURIComponent(key) + '&expiry=' + encodeURIComponent(expiresAt);
-      window.location.replace(dest);
-    } else {
-      window.location.replace(BASE_URL);
+      dest += '?key=' + encodeURIComponent(key) + '&expiry=' + encodeURIComponent(expiresAt);
     }
+    window.location.replace(dest);
+  }
+
+  // Token check
+  if (!token || token !== VALID_TOKEN) {
+    goToIndex();
+    return;
   }
 
   // --- Check cached key ---
@@ -52,7 +56,7 @@
 
   if (cachedKey && cachedExpiry) {
     if (new Date(cachedExpiry) > new Date()) {
-      // Valid key — skip fetch, go straight to vercel site with key
+      // Valid key — skip everything, go straight to vercel site
       goToIndex(cachedKey, cachedExpiry);
       return;
     } else {
@@ -62,20 +66,23 @@
     }
   }
 
-  // --- Fetch key from API ---
+  // --- No valid cached key: fetch from API ---
   try {
-    const res  = await fetch('/api/getkey?token=' + encodeURIComponent(token));
+    const res  = await fetch('/api/getkey?token=' + token);
     const data = await res.json();
 
-    if (data && data.key && data.expires_at) {
-      localStorage.setItem('wowhub_key',        data.key);
-      localStorage.setItem('wowhub_key_expiry', data.expires_at);
-      goToIndex(data.key, data.expires_at);
-    } else {
-      console.error('API Error:', data);
+    if (!res.ok || !data.key) {
+      goToIndex();
+      return;
     }
+
+    localStorage.setItem('wowhub_key',        data.key);
+    localStorage.setItem('wowhub_key_expiry', data.expires_at);
+    goToIndex(data.key, data.expires_at);
+
   } catch (e) {
-    console.error('Network Error:', e);
+    // Network error — go to vercel site
+    goToIndex();
   }
 })();
 </script>
