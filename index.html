@@ -287,13 +287,19 @@ function startCountdown(expiryIso) {
   countdownInterval = setInterval(tick, 1000);
 }
 
-// ── Main: read key from URL params sent by index3neon ────────────
+// ── Main: read key from URL params (or fallback to localStorage) ──
 (function init() {
-  const params  = new URLSearchParams(window.location.search);
-  const key     = params.get('key');
-  const expiry  = params.get('expiry');
+  const params = new URLSearchParams(window.location.search);
+  let key    = params.get('key');
+  let expiry = params.get('expiry');
 
-  // No key in URL? Redirect to the bridge
+  // Fallback: refresh after URL was cleaned → use the saved key
+  if (!key || !expiry) {
+    key    = localStorage.getItem('wowhub_key');
+    expiry = localStorage.getItem('wowhub_key_expiry');
+  }
+
+  // Still nothing? User didn't complete the task
   if (!key || !expiry) {
     showState('state-error');
     document.getElementById('error-msg').textContent =
@@ -301,7 +307,7 @@ function startCountdown(expiryIso) {
     return;
   }
 
-  // Key already expired?
+  // Key expired?
   if (new Date(expiry) <= new Date()) {
     localStorage.removeItem('wowhub_key');
     localStorage.removeItem('wowhub_key_expiry');
@@ -309,7 +315,11 @@ function startCountdown(expiryIso) {
     return;
   }
 
-  // All good — show key + timer
+  // Save so a refresh still works, then hide key from the address bar
+  localStorage.setItem('wowhub_key', key);
+  localStorage.setItem('wowhub_key_expiry', expiry);
+  history.replaceState(null, '', window.location.pathname);
+
   document.getElementById('key-display').textContent = key;
   showState('state-success');
   startCountdown(expiry);
