@@ -39,8 +39,8 @@ export default async function handler(req, res) {
     if (!rows || rows.length === 0) {
       return res.status(404).json({ error: 'No keys available' });
     }
-
     return res.status(200).json({ key: rows[0].key, expires_at: rows[0].expires_at });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
+}
