@@ -7,8 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: 
-#0a0a1a;
+    background: #0a0a1a;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -19,8 +18,7 @@
   .spinner {
     width: 40px; height: 40px;
     border: 3px solid rgba(108,99,255,0.2);
-    border-top-color: 
-#6c63ff;
+    border-top-color: #6c63ff;
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
   }
@@ -32,20 +30,24 @@
 <script>
 (async function() {
   const VALID_TOKEN = 'WOWHUB2026';
+  const BASE_URL = 'https://wowhub-webhook.vercel.app/index.html';
+
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
 
-  // Token check
-  if (!token || token !== VALID_TOKEN) {
-    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
-    return;
+  // --- Helper: redirect to external index.html ---
+  function goToIndex(key = '', expiresAt = '') {
+    let dest = BASE_URL;
+    if (key && expiresAt) {
+      dest += '?key=' + encodeURIComponent(key) + '&expiry=' + encodeURIComponent(expiresAt);
+    }
+    window.location.replace(dest);
   }
 
-  // --- Helper: redirect to index.html with key data ---
-  function goToIndex(key, expiresAt) {
-    const dest = 'index.html?key=' + encodeURIComponent(key)
-                + '&expiry=' + encodeURIComponent(expiresAt);
-    window.location.replace(dest);
+  // Token check
+  if (!token || token !== VALID_TOKEN) {
+    goToIndex();
+    return;
   }
 
   // --- Check cached key ---
@@ -54,7 +56,7 @@
 
   if (cachedKey && cachedExpiry) {
     if (new Date(cachedExpiry) > new Date()) {
-      // Valid key — skip everything, go straight to index.html
+      // Valid key — skip everything, go straight to vercel site
       goToIndex(cachedKey, cachedExpiry);
       return;
     } else {
@@ -70,8 +72,7 @@
     const data = await res.json();
 
     if (!res.ok || !data.key) {
-      // No key available — send back to lootlabs
-      window.location.href = 'https://loot-link.com/s?9diqLQbJ';
+      goToIndex();
       return;
     }
 
@@ -80,8 +81,8 @@
     goToIndex(data.key, data.expires_at);
 
   } catch (e) {
-    // Network error — send back to lootlabs
-    window.location.href = 'https://loot-link.com/s?9diqLQbJ';
+    // Network error — go to vercel site
+    goToIndex();
   }
 })();
 </script>
